@@ -767,12 +767,14 @@
         </div>
     </div>
 
-    <!-- Script -->
+    <!-- Google Sign-In Script -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <!-- Main Script -->
     <script>
         // Configuration
-        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-            ? 'http://localhost:8000' 
-            : 'https://drive-t0my.onrender.com';
+        const API_BASE_URL = 'https://drive-t0my.onrender.com';
+        const GOOGLE_CLIENT_ID = '304984836974-0o5rdilg1pdvg3almd5js4b42je8p6e3.apps.googleusercontent.com';
         
         let currentUser = null;
         let currentToken = null;
@@ -823,35 +825,117 @@
             const savedUser = localStorage.getItem('cloud_drive_user');
             
             if (savedToken && savedUser) {
-                currentToken = savedToken;
-                currentUser = JSON.parse(savedUser);
+                try {
+                    currentToken = savedToken;
+                    currentUser = JSON.parse(savedUser);
+                    showApp();
+                    loadStorageInfo();
+                    loadFilesAndFolders();
+                } catch (e) {
+                    console.error('Error loading saved user:', e);
+                    localStorage.removeItem('cloud_drive_token');
+                    localStorage.removeItem('cloud_drive_user');
+                }
+            }
+            
+            // Check for token in URL fragment
+            const hash = window.location.hash;
+            if (hash && hash.includes('token=')) {
+                const tokenMatch = hash.match(/token=([^&]+)/);
+                if (tokenMatch) {
+                    const token = tokenMatch[1];
+                    localStorage.setItem('cloud_drive_token', token);
+                    window.location.hash = '';
+                    // Get user info with the token
+                    fetchUserInfo(token);
+                }
+            }
+            
+            // Listen for Google auth messages from popup
+            window.addEventListener('message', handleGoogleAuthMessage);
+        });
+
+        // Handle messages from Google auth popup
+        function handleGoogleAuthMessage(event) {
+            if (event.origin !== API_BASE_URL) {
+                return; // Ignore messages from other origins
+            }
+            
+            if (event.data.type === 'google-auth-success') {
+                const authData = event.data.data;
+                currentToken = authData.access_token;
+                currentUser = authData.user;
+                
+                localStorage.setItem('cloud_drive_token', currentToken);
+                localStorage.setItem('cloud_drive_user', JSON.stringify(currentUser));
+                
                 showApp();
                 loadStorageInfo();
                 loadFilesAndFolders();
+                
+                showAlert('Google sign-in successful!', 'success');
+            } else if (event.data.type === 'google-auth-error') {
+                showAuthAlert(`Google sign-in failed: ${event.data.error}`, 'error');
             }
-        });
-
-        // Google Sign-In
-        function initGoogleSignIn() {
-            // Check if Google OAuth is available
-            if (!window.google || !window.google.accounts) {
-                console.warn('Google OAuth not loaded');
-                return;
-            }
-            
-            google.accounts.id.initialize({
-                client_id: '304984836974-0o5rdilg1pdvg3almd5js4b42je8p6e3.apps.googleusercontent.com', // Replace with your actual Google Client ID
-                callback: handleGoogleSignIn
-            });
         }
 
-        async function handleGoogleSignIn(response) {
+        // Fetch user info with token
+        async function fetchUserInfo(token) {
             try {
-                // Send the Google ID token to your backend
-                const backendResponse = await fetch(`${API_BASE_URL}/auth/google/callback`, {
+                const response = await fetch(`${API_BASE_URL}/users/me/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to get user info');
+                }
+                
+                currentUser = await response.json();
+                currentToken = token;
+                
+                localStorage.setItem('cloud_drive_token', currentToken);
+                localStorage.setItem('cloud_drive_user', JSON.stringify(currentUser));
+                
+                showApp();
+                loadStorageInfo();
+                loadFilesAndFolders();
+                
+                showAlert('Login successful!', 'success');
+            } catch (error) {
+                console.error('Fetch user info error:', error);
+                localStorage.removeItem('cloud_drive_token');
+                showAuthAlert('Invalid token. Please login again.', 'error');
+            }
+        }
+
+        // Google Sign-In Implementation
+        function initGoogleSignIn() {
+            if (window.google && window.google.accounts) {
+                google.accounts.id.initialize({
+                    client_id: GOOGLE_CLIENT_ID,
+                    callback: handleGoogleCredentialResponse
+                });
+                
+                // Optional: Render button if needed
+                // google.accounts.id.renderButton(
+                //     document.getElementById('google-signin-button'),
+                //     { theme: 'outline', size: 'large' }
+                // );
+            }
+        }
+
+        // Handle Google credential response
+        async function handleGoogleCredentialResponse(response) {
+            try {
+                // Send credential to backend for verification
+                const backendResponse = await fetch(`${API_BASE_URL}/auth/google`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify({
                         credential: response.credential
@@ -859,14 +943,15 @@
                 });
                 
                 if (!backendResponse.ok) {
-                    throw new Error('Google authentication failed');
+                    const errorData = await backendResponse.json();
+                    throw new Error(errorData.detail || 'Google authentication failed');
                 }
                 
-                const data = await backendResponse.json();
+                const authData = await backendResponse.json();
                 
                 // Store token and user info
-                currentToken = data.access_token;
-                currentUser = data.user;
+                currentToken = authData.access_token;
+                currentUser = authData.user;
                 
                 localStorage.setItem('cloud_drive_token', currentToken);
                 localStorage.setItem('cloud_drive_user', JSON.stringify(currentUser));
@@ -878,22 +963,28 @@
                 showAlert('Google sign-in successful!', 'success');
             } catch (error) {
                 console.error('Google sign-in error:', error);
-                showAuthAlert('Google sign-in failed. Please try again.', 'error');
+                showAuthAlert(`Google sign-in failed: ${error.message}`, 'error');
             }
         }
 
-        // Alternative Google OAuth (redirect method)
-        function signInWithGoogle() {
-            window.location.href = `${API_BASE_URL}/auth/google`;
+        // Alternative: Open Google Sign-In in popup
+        function signInWithGooglePopup() {
+            // Initialize Google Sign-In
+            if (!window.google || !window.google.accounts) {
+                showAuthAlert('Google Sign-In is not available. Please refresh the page.', 'error');
+                return;
+            }
+            
+            google.accounts.id.prompt();
         }
 
         // Google Sign-In buttons
         if (googleLoginBtn) {
-            googleLoginBtn.addEventListener('click', signInWithGoogle);
+            googleLoginBtn.addEventListener('click', signInWithGooglePopup);
         }
         
         if (googleRegisterBtn) {
-            googleRegisterBtn.addEventListener('click', signInWithGoogle);
+            googleRegisterBtn.addEventListener('click', signInWithGooglePopup);
         }
 
         // Authentication Tabs
@@ -923,21 +1014,23 @@
             showAuthAlert('Logging in...', 'success');
             
             try {
+                const formData = new URLSearchParams();
+                formData.append('username', email);
+                formData.append('password', password);
+                formData.append('grant_type', 'password');
+                
                 const response = await fetch(`${API_BASE_URL}/token`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                         'Accept': 'application/json',
                     },
-                    body: new URLSearchParams({
-                        username: email,
-                        password: password,
-                        grant_type: 'password'
-                    })
+                    body: formData
                 });
                 
                 if (!response.ok) {
-                    throw new Error('Invalid email or password');
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Invalid email or password');
                 }
                 
                 const data = await response.json();
@@ -1006,6 +1099,7 @@
                     throw new Error(errorData.detail || 'Registration failed');
                 }
                 
+                const user = await response.json();
                 showAuthAlert('Registration successful! Please login.', 'success');
                 
                 // Switch to login tab
@@ -1042,12 +1136,11 @@
                 navItems.forEach(i => i.classList.remove('active'));
                 item.classList.add('active');
                 
-                // Handle section switching
                 const section = item.getAttribute('data-section');
                 if (section === 'files') {
                     loadFilesAndFolders(currentFolderId);
                 }
-                // Implementation for other sections can be added here
+                // Add other sections as needed
             });
         });
 
@@ -1171,13 +1264,11 @@
             authContainer.style.display = 'none';
             appContainer.style.display = 'block';
             
-            // Update user info
             if (currentUser) {
                 userName.textContent = currentUser.full_name;
                 const initials = currentUser.full_name.split(' ').map(n => n[0]).join('').toUpperCase();
                 userAvatar.textContent = initials || 'U';
                 
-                // Show auth provider badge if available
                 if (currentUser.auth_provider === 'google') {
                     userAvatar.style.background = 'linear-gradient(135deg, #4285f4 0%, #34a853 100%)';
                 }
@@ -1225,7 +1316,6 @@
                 
                 if (!response.ok) {
                     if (response.status === 401) {
-                        // Token expired
                         localStorage.removeItem('cloud_drive_token');
                         localStorage.removeItem('cloud_drive_user');
                         showAuth();
@@ -1277,8 +1367,6 @@
                         showAuth();
                         return;
                     }
-                    const errorText = await foldersResponse.text();
-                    console.error('Folders response error:', errorText);
                     throw new Error('Failed to load folders');
                 }
                 
@@ -1306,8 +1394,6 @@
                         showAuth();
                         return;
                     }
-                    const errorText = await filesResponse.text();
-                    console.error('Files response error:', errorText);
                     throw new Error('Failed to load files');
                 }
                 
@@ -1315,17 +1401,20 @@
                 
                 // Update breadcrumb if folderId is not null
                 if (folderId) {
-                    // Try to get folder name for breadcrumb
-                    const folderResponse = await fetch(`${API_BASE_URL}/folders/${folderId}`, {
-                        headers: {
-                            'Authorization': `Bearer ${currentToken}`,
-                            'Accept': 'application/json'
+                    try {
+                        const folderResponse = await fetch(`${API_BASE_URL}/folders/${folderId}`, {
+                            headers: {
+                                'Authorization': `Bearer ${currentToken}`,
+                                'Accept': 'application/json'
+                            }
+                        });
+                        
+                        if (folderResponse.ok) {
+                            const folder = await folderResponse.json();
+                            updateBreadcrumb(folderId, folder.name);
                         }
-                    });
-                    
-                    if (folderResponse.ok) {
-                        const folder = await folderResponse.json();
-                        updateBreadcrumb(folderId, folder.name);
+                    } catch (e) {
+                        console.error('Error getting folder info:', e);
                     }
                 } else {
                     updateBreadcrumb(null, 'My Drive');
@@ -1344,23 +1433,17 @@
         }
 
         function updateBreadcrumb(folderId, folderName) {
-            // Update folder history
             if (folderId) {
-                // Find if folder already in history
                 const index = folderHistory.findIndex(f => f.id === folderId);
                 if (index !== -1) {
-                    // Remove everything after this folder
                     folderHistory = folderHistory.slice(0, index + 1);
                 } else {
-                    // Add new folder to history
                     folderHistory.push({ id: folderId, name: folderName });
                 }
             } else {
-                // Reset to root
                 folderHistory = [{ id: null, name: 'My Drive' }];
             }
             
-            // Render breadcrumb
             breadcrumb.innerHTML = '';
             
             folderHistory.forEach((folder, index) => {
@@ -1400,7 +1483,6 @@
                 return;
             }
             
-            // Create grid container
             const grid = document.createElement('div');
             grid.className = 'file-grid';
             
@@ -1432,7 +1514,6 @@
                 const fileElement = document.createElement('div');
                 fileElement.className = 'file-item';
                 
-                // Determine file icon based on mime type
                 let fileIcon = 'fa-file';
                 if (file.mime_type) {
                     if (file.mime_type.startsWith('image/')) {
@@ -1452,7 +1533,6 @@
                     }
                 }
                 
-                // Format file size
                 const fileSize = formatFileSize(file.file_size);
                 
                 fileElement.innerHTML = `
@@ -1479,7 +1559,6 @@
             
             filesContent.appendChild(grid);
             
-            // Add event listeners
             addItemEventListeners();
         }
 
@@ -1538,7 +1617,6 @@
                 const openBtn = item.querySelector('[data-action="open"]');
                 if (openBtn) {
                     item.addEventListener('click', (e) => {
-                        // Only trigger if not clicking on action buttons
                         if (!e.target.closest('.folder-actions')) {
                             const folderId = parseInt(openBtn.getAttribute('data-id'));
                             loadFilesAndFolders(folderId);
@@ -1556,7 +1634,6 @@
             for (let i = 0; i < fileList.length; i++) {
                 const file = fileList[i];
                 
-                // Check file size (10GB limit)
                 if (file.size > 10 * 1024 * 1024 * 1024) {
                     showAlert(`File "${file.name}" is too large (max 10GB)`, 'error');
                     continue;
@@ -1614,28 +1691,21 @@
                 
                 const file = await response.json();
                 
-                // Update modal title
                 previewTitle.textContent = escapeHtml(file.original_filename);
-                
-                // Clear previous content
                 previewContent.innerHTML = '';
                 
-                // Set up download button
                 downloadBtn.onclick = () => {
                     if (file.download_url) {
                         window.open(file.download_url, '_blank');
                     }
                 };
                 
-                // Set up share button
                 shareBtn.onclick = () => {
                     toggleFileShare(fileId, !file.is_public);
                 };
                 
-                // Update share button text
                 shareBtn.innerHTML = file.is_public ? '<i class="fas fa-lock"></i> Make Private' : '<i class="fas fa-share"></i> Make Public';
                 
-                // Set up delete button
                 deletePreviewBtn.onclick = () => {
                     if (confirm('Are you sure you want to delete this file?')) {
                         deleteFile(fileId);
@@ -1643,7 +1713,6 @@
                     }
                 };
                 
-                // Display based on file type
                 if (file.mime_type && file.mime_type.startsWith('image/') && file.preview_url) {
                     const img = document.createElement('img');
                     img.src = file.preview_url;
@@ -1773,7 +1842,6 @@
                 const data = await response.json();
                 showAlert(`File is now ${isPublic ? 'public' : 'private'}`, 'success');
                 
-                // Update preview if it's the current file
                 if (currentPreviewFileId === fileId) {
                     previewFile(fileId);
                 }
@@ -1799,7 +1867,6 @@
                 
                 const files = await response.json();
                 
-                // Display search results
                 filesContent.innerHTML = '';
                 
                 if (files.length === 0) {
@@ -1813,16 +1880,13 @@
                     return;
                 }
                 
-                // Show search header
                 const header = document.createElement('div');
                 header.innerHTML = `<h3 style="margin-bottom: 20px;">Search results for "${escapeHtml(query)}"</h3>`;
                 filesContent.appendChild(header);
                 
-                // Create grid for search results
                 const grid = document.createElement('div');
                 grid.className = 'file-grid';
                 
-                // Render files
                 files.forEach(file => {
                     const fileElement = document.createElement('div');
                     fileElement.className = 'file-item';
@@ -1857,7 +1921,6 @@
                 
                 filesContent.appendChild(grid);
                 
-                // Re-add event listeners
                 addItemEventListeners();
                 
             } catch (error) {
