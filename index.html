@@ -156,6 +156,38 @@
             color: var(--dark);
         }
 
+        .btn-google {
+            background-color: #4285f4;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-google:hover {
+            background-color: #357ae8;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 25px 0;
+            color: var(--gray);
+        }
+
+        .divider::before,
+        .divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background-color: var(--gray-light);
+        }
+
+        .divider span {
+            padding: 0 15px;
+        }
+
         /* Main App Layout */
         .app-container {
             display: none;
@@ -573,6 +605,14 @@
                     <input type="password" id="login-password" class="form-control" placeholder="Enter your password" required>
                 </div>
                 <button type="submit" class="btn btn-block">Login</button>
+                
+                <div class="divider">
+                    <span>OR</span>
+                </div>
+                
+                <button type="button" id="google-login-btn" class="btn btn-block btn-google">
+                    <i class="fab fa-google"></i> Sign in with Google
+                </button>
             </form>
             
             <form id="register-form" class="auth-form">
@@ -589,6 +629,14 @@
                     <input type="password" id="register-password" class="form-control" placeholder="Create a password (min. 6 characters)" required>
                 </div>
                 <button type="submit" class="btn btn-block">Create Account</button>
+                
+                <div class="divider">
+                    <span>OR</span>
+                </div>
+                
+                <button type="button" id="google-register-btn" class="btn btn-block btn-google">
+                    <i class="fab fa-google"></i> Sign up with Google
+                </button>
             </form>
             
             <div id="auth-alert" class="alert" style="margin-top: 20px;"></div>
@@ -766,6 +814,8 @@
         const downloadBtn = document.getElementById('download-btn');
         const shareBtn = document.getElementById('share-btn');
         const deletePreviewBtn = document.getElementById('delete-preview-btn');
+        const googleLoginBtn = document.getElementById('google-login-btn');
+        const googleRegisterBtn = document.getElementById('google-register-btn');
 
         // Check if user is already logged in
         document.addEventListener('DOMContentLoaded', () => {
@@ -780,6 +830,71 @@
                 loadFilesAndFolders();
             }
         });
+
+        // Google Sign-In
+        function initGoogleSignIn() {
+            // Check if Google OAuth is available
+            if (!window.google || !window.google.accounts) {
+                console.warn('Google OAuth not loaded');
+                return;
+            }
+            
+            google.accounts.id.initialize({
+                client_id: 'YOUR_GOOGLE_CLIENT_ID', // Replace with your actual Google Client ID
+                callback: handleGoogleSignIn
+            });
+        }
+
+        async function handleGoogleSignIn(response) {
+            try {
+                // Send the Google ID token to your backend
+                const backendResponse = await fetch(`${API_BASE_URL}/auth/google/callback`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        credential: response.credential
+                    })
+                });
+                
+                if (!backendResponse.ok) {
+                    throw new Error('Google authentication failed');
+                }
+                
+                const data = await backendResponse.json();
+                
+                // Store token and user info
+                currentToken = data.access_token;
+                currentUser = data.user;
+                
+                localStorage.setItem('cloud_drive_token', currentToken);
+                localStorage.setItem('cloud_drive_user', JSON.stringify(currentUser));
+                
+                showApp();
+                loadStorageInfo();
+                loadFilesAndFolders();
+                
+                showAlert('Google sign-in successful!', 'success');
+            } catch (error) {
+                console.error('Google sign-in error:', error);
+                showAuthAlert('Google sign-in failed. Please try again.', 'error');
+            }
+        }
+
+        // Alternative Google OAuth (redirect method)
+        function signInWithGoogle() {
+            window.location.href = `${API_BASE_URL}/auth/google`;
+        }
+
+        // Google Sign-In buttons
+        if (googleLoginBtn) {
+            googleLoginBtn.addEventListener('click', signInWithGoogle);
+        }
+        
+        if (googleRegisterBtn) {
+            googleRegisterBtn.addEventListener('click', signInWithGoogle);
+        }
 
         // Authentication Tabs
         authTabs.forEach(tab => {
@@ -1061,6 +1176,11 @@
                 userName.textContent = currentUser.full_name;
                 const initials = currentUser.full_name.split(' ').map(n => n[0]).join('').toUpperCase();
                 userAvatar.textContent = initials || 'U';
+                
+                // Show auth provider badge if available
+                if (currentUser.auth_provider === 'google') {
+                    userAvatar.style.background = 'linear-gradient(135deg, #4285f4 0%, #34a853 100%)';
+                }
             }
         }
 
@@ -1688,7 +1808,7 @@
                             <i class="fas fa-search"></i>
                             <h3>No results found</h3>
                             <p>No files or folders match your search</p>
-                        </div>
+                    </div>
                     `;
                     return;
                 }
