@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cloud Drive</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Nebula Drive — Modern Cloud Storage</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -14,27 +14,660 @@
         }
 
         :root {
-            --primary: #4361ee;
-            --primary-light: #4895ef;
-            --secondary: #3a0ca3;
-            --success: #4cc9f0;
-            --danger: #f72585;
-            --warning: #f8961e;
-            --light: #f8f9fa;
-            --dark: #212529;
-            --gray: #6c757d;
-            --gray-light: #e9ecef;
-            --border-radius: 8px;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            --transition: all 0.3s ease;
+            --bg-surface: #ffffff;
+            --bg-app: #f9fafb;
+            --bg-elevated: #ffffff;
+            --border-subtle: rgba(0, 0, 0, 0.06);
+            --border-medium: rgba(0, 0, 0, 0.08);
+            --text-primary: #11181c;
+            --text-secondary: #5e6f8d;
+            --text-tertiary: #8c9ab3;
+            --accent: #0066ff;
+            --accent-hover: #0052cc;
+            --accent-soft: rgba(0, 102, 255, 0.08);
+            --success: #10b981;
+            --danger: #f43f5e;
+            --warning: #f59e0b;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.03);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
+            --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.08);
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f5f7fb;
-            color: var(--dark);
-            line-height: 1.6;
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            background-color: var(--bg-app);
+            color: var(--text-primary);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
         }
+
+        /* modern reset & containers */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 28px;
+        }
+
+        /* AUTH (silicon valley clean) */
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(145deg, #f6f9fc 0%, #edf2f7 100%);
+        }
+
+        .auth-box {
+            background: var(--bg-elevated);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 460px;
+            padding: 44px 40px;
+            backdrop-filter: blur(0px);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .auth-tabs {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 32px;
+            border-bottom: none;
+        }
+
+        .auth-tab {
+            flex: 0 0 auto;
+            text-align: center;
+            padding: 8px 0;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 1rem;
+            color: var(--text-secondary);
+            transition: var(--transition);
+            border-bottom: 2px solid transparent;
+        }
+
+        .auth-tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-md);
+            font-size: 0.9375rem;
+            background: #fff;
+            transition: var(--transition);
+            font-family: 'Inter', monospace;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-soft);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 40px;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            line-height: 1.4;
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        .btn:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-light {
+            background-color: #f1f3f5;
+            color: var(--text-primary);
+        }
+
+        .btn-light:hover {
+            background-color: #e9ecef;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background-color: #e11d48;
+        }
+
+        .btn-google {
+            background-color: #fff;
+            color: #3c4043;
+            border: 1px solid var(--border-medium);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-google:hover {
+            background-color: #f8f9fa;
+            border-color: #dadce0;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 28px 0;
+            color: var(--text-tertiary);
+            font-size: 0.75rem;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background-color: var(--border-medium);
+        }
+
+        .divider span {
+            padding: 0 16px;
+        }
+
+        /* MAIN APP LAYOUT */
+        .app-container {
+            display: none;
+            min-height: 100vh;
+            background: var(--bg-app);
+        }
+
+        .app-header {
+            background: rgba(255,255,255,0.96);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 12px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #0066ff 0%, #3b82f6 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo i {
+            background: none;
+            color: var(--accent);
+            font-size: 1.6rem;
+        }
+
+        .search-bar {
+            flex: 1;
+            max-width: 480px;
+        }
+
+        .search-bar .form-control {
+            border-radius: 40px;
+            background-color: #fff;
+            border: 1px solid var(--border-medium);
+            padding-left: 40px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%238c9ab3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="7.5"></circle><line x1="21" y1="21" x2="15.8" y2="15.8"></line></svg>');
+            background-repeat: no-repeat;
+            background-position: 16px center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f8fafc;
+            padding: 6px 16px 6px 12px;
+            border-radius: 40px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(145deg, var(--accent), #3b82f6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        /* Sidebar modern */
+        .app-main {
+            display: flex;
+            padding: 32px 0 40px;
+            gap: 28px;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: transparent;
+            border-radius: 0;
+            padding: 0;
+            position: sticky;
+            top: 88px;
+            height: calc(100vh - 100px);
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 10px 16px;
+            margin-bottom: 4px;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.9375rem;
+        }
+
+        .nav-item i {
+            width: 22px;
+            font-size: 1.1rem;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        .storage-info {
+            background: var(--bg-elevated);
+            padding: 20px;
+            border-radius: var(--radius-lg);
+            margin-top: 32px;
+            border: 1px solid var(--border-subtle);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .storage-info h4 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .storage-bar {
+            height: 6px;
+            background: #e4e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .storage-used {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 10px;
+        }
+
+        /* Content area */
+        .content {
+            flex: 1;
+            background: transparent;
+            border-radius: 0;
+            padding: 0;
+            box-shadow: none;
+            min-height: 70vh;
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .folder-breadcrumb {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            background: var(--bg-elevated);
+            padding: 8px 18px;
+            border-radius: 60px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .breadcrumb-item {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .breadcrumb-item.active {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .action-buttons .btn {
+            border-radius: 40px;
+            padding: 8px 20px;
+        }
+
+        /* Upload zone */
+        .upload-area {
+            border: 1.5px dashed #cdd9ed;
+            background: #ffffff;
+            border-radius: var(--radius-xl);
+            padding: 28px 20px;
+            text-align: center;
+            margin-bottom: 32px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .upload-area.dragover {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+        }
+
+        .upload-icon i {
+            font-size: 2.5rem;
+            color: var(--accent);
+            opacity: 0.7;
+        }
+
+        /* File grid silicon valley minimal */
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .file-item, .folder-item {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 20px 16px;
+            text-align: center;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            backdrop-filter: blur(0px);
+        }
+
+        .file-item:hover, .folder-item:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent);
+            box-shadow: var(--shadow-md);
+        }
+
+        .folder-icon, .file-icon {
+            font-size: 2.8rem;
+            margin-bottom: 12px;
+            color: var(--accent);
+        }
+
+        .file-name, .folder-name {
+            font-weight: 500;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-size, .folder-count {
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+        }
+
+        .action-btn {
+            background: transparent;
+            border: none;
+            padding: 6px 8px;
+            border-radius: 30px;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .action-btn:hover {
+            background: #f0f2f5;
+            color: var(--accent);
+        }
+
+        /* modal modern */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-elevated);
+            border-radius: var(--radius-xl);
+            width: 100%;
+            max-width: 500px;
+            padding: 28px 32px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-tertiary);
+        }
+
+        .alert {
+            padding: 12px 20px;
+            border-radius: 60px;
+            margin-bottom: 16px;
+            font-size: 0.875rem;
+            background: white;
+            border-left: 3px solid;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .alert-success {
+            border-left-color: var(--success);
+            background: #f0fdf4;
+        }
+
+        .alert-error {
+            border-left-color: var(--danger);
+            background: #fff1f2;
+        }
+
+        .spinner {
+            border: 2px solid #e2e8f0;
+            border-top: 2px solid var(--accent);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 0 20px; }
+            .app-main { flex-direction: column; }
+            .sidebar { width: 100%; position: static; height: auto; margin-bottom: 16px; }
+            .file-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+            .header-content { flex-wrap: wrap; }
+            .search-bar { max-width: 100%; order: 3; margin-top: 8px; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <!-- AUTHENTICATION (unchanged logic, refined visual) -->
+    <div id="auth-container" class="auth-container">
+        <div class="auth-box">
+            <div class="auth-tabs">
+                <div class="auth-tab active" data-tab="login">Sign in</div>
+                <div class="auth-tab" data-tab="register">Create account</div>
+            </div>
+            <form id="login-form" class="auth-form active">
+                <div class="form-group"><label>Email</label><input type="email" id="login-email" class="form-control" placeholder="hello@example.com" required></div>
+                <div class="form-group"><label>Password</label><input type="password" id="login-password" class="form-control" placeholder="••••••••" required></div>
+                <button type="submit" class="btn btn-block">Continue</button>
+                <div class="divider"><span>OR</span></div>
+                <button type="button" id="google-login-btn" class="btn btn-block btn-google"><i class="fab fa-google"></i> Continue with Google</button>
+            </form>
+            <form id="register-form" class="auth-form">
+                <div class="form-group"><label>Full name</label><input type="text" id="register-fullname" class="form-control" placeholder="Alex Johnson" required></div>
+                <div class="form-group"><label>Email</label><input type="email" id="register-email" class="form-control" placeholder="hello@example.com" required></div>
+                <div class="form-group"><label>Password</label><input type="password" id="register-password" class="form-control" placeholder="Create password" required></div>
+                <button type="submit" class="btn btn-block">Get started</button>
+                <div class="divider"><span>OR</span></div>
+                <button type="button" id="google-register-btn" class="btn btn-block btn-google"><i class="fab fa-google"></i> Sign up with Google</button>
+            </form>
+            <div id="auth-alert" class="alert" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="app-container" class="app-container">
+        <header class="app-header">
+            <div class="container header-content">
+                <div class="logo"><i class="fas fa-cloud-upload-alt"></i> Nebula Drive</div>
+                <div class="search-bar"><input type="text" id="search-input" class="form-control" placeholder="Search files..."></div>
+                <div class="user-info"><div class="user-avatar" id="user-avatar">JD</div><div><div id="user-name" style="font-weight: 500;"></div><button id="logout-btn" class="action-btn" style="font-size: 12px;">Sign out</button></div></div>
+            </div>
+        </header>
+        <main class="container app-main">
+            <aside class="sidebar">
+                <div class="nav-item active" data-section="files"><i class="fas fa-folder"></i> My Files</div>
+                <div class="nav-item" data-section="recent"><i class="fas fa-clock"></i> Recent</div>
+                <div class="nav-item" data-section="shared"><i class="fas fa-share-alt"></i> Shared</div>
+                <div class="nav-item" data-section="trash"><i class="fas fa-trash-alt"></i> Trash</div>
+                <div class="storage-info"><h4>Storage</h4><div class="storage-bar"><div id="storage-used-bar" class="storage-used" style="width:0%"></div></div><div id="storage-text">0 GB of 10 GB used</div></div>
+            </aside>
+            <section class="content">
+                <div class="content-header"><div class="folder-breadcrumb" id="breadcrumb"><div class="breadcrumb-item active" data-id="root">My Drive</div></div><div class="action-buttons"><button id="new-folder-btn" class="btn btn-light"><i class="fas fa-folder-plus"></i> New folder</button><button id="upload-btn" class="btn"><i class="fas fa-upload"></i> Upload</button><input type="file" id="file-input" multiple style="display: none;"></div></div>
+                <div id="upload-area" class="upload-area"><div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div><h3>Drag & drop files</h3><p style="font-size: 13px;">or click to browse</p><p style="font-size: 12px; color: var(--text-tertiary);">Max file size: 10GB</p></div>
+                <div id="alerts-container"></div>
+                <div id="files-container"><div class="spinner" id="loading-spinner" style="display: none;"></div><div id="files-content"><div class="empty-state"><i class="fas fa-folder-open"></i><h3>No files yet</h3><p>Upload your first file or create a new folder</p></div></div></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="folder-modal" class="modal"><div class="modal-content"><div class="modal-header" style="display: flex; justify-content: space-between; margin-bottom: 20px;"><h3 class="modal-title">New folder</h3><button class="modal-close" data-modal="folder-modal" style="background: none; border: none; font-size: 24px;">&times;</button></div><form id="folder-form"><div class="form-group"><label>Folder name</label><input type="text" id="folder-name" class="form-control" placeholder="Untitled folder" required></div><button type="submit" class="btn btn-block">Create</button></form></div></div>
+    <div id="preview-modal" class="modal"><div class="modal-content"><div class="modal-header" style="display: flex; justify-content: space-between; margin-bottom: 16px;"><h3 class="modal-title" id="preview-title">Preview</h3><button class="modal-close" data-modal="preview-modal" style="background: none; border: none; font-size: 24px;">&times;</button></div><div id="preview-content"></div><div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;"><button id="download-btn" class="btn btn-light">Download</button><button id="share-btn" class="btn btn-light">Share</button><button id="delete-preview-btn" class="btn btn-danger">Delete</button></div></div></div>
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+        // All original business logic preserved — UI modernized without feature addition.
+        const API_BASE_URL = 'https://drive-1-r8nr.onrender.com';
+        const GOOGLE_CLIENT_ID = '304984836974-0o5rdilg1pdvg3almd5js4b42je8p6e3.apps.googleusercontent.com';
+        let currentUser = null, currentToken = null, currentFolderId = null, currentFiles = [], currentFolders = [], currentPreviewFileId = null, folderHistory = [{ id: null, name: 'My Drive' }];
+        const authContainer = document.getElementById('auth-container'), appContainer = document.getElementById('app-container');
+        const loginForm = document.getElementById('login-form'), registerForm = document.getElementById('register-form'), authTabs = document.querySelectorAll('.auth-tab'), authAlert = document.getElementById('auth-alert');
+        const logoutBtn = document.getElementById('logout-btn'), userAvatar = document.getElementById('user-avatar'), userName = document.getElementById('user-name'), storageUsedBar = document.getElementById('storage-used-bar'), storageText = document.getElementById('storage-text'), searchInput = document.getElementById('search-input'), navItems = document.querySelectorAll('.nav-item'), breadcrumb = document.getElementById('breadcrumb'), newFolderBtn = document.getElementById('new-folder-btn'), uploadBtn = document.getElementById('upload-btn'), fileInput = document.getElementById('file-input'), uploadArea = document.getElementById('upload-area'), filesContent = document.getElementById('files-content'), loadingSpinner = document.getElementById('loading-spinner'), alertsContainer = document.getElementById('alerts-container'), folderModal = document.getElementById('folder-modal'), previewModal = document.getElementById('preview-modal'), folderForm = document.getElementById('folder-form'), folderNameInput = document.getElementById('folder-name'), previewContent = document.getElementById('preview-content'), previewTitle = document.getElementById('preview-title'), downloadBtn = document.getElementById('download-btn'), shareBtn = document.getElementById('share-btn'), deletePreviewBtn = document.getElementById('delete-preview-btn'), googleLoginBtn = document.getElementById('google-login-btn'), googleRegisterBtn = document.getElementById('google-register-btn');
+
+        document.addEventListener('DOMContentLoaded', () => { const savedToken = localStorage.getItem('cloud_drive_token'), savedUser = localStorage.getItem('cloud_drive_user'); if(savedToken && savedUser) { try { currentToken = savedToken; currentUser = JSON.parse(savedUser); showApp(); loadStorageInfo(); loadFilesAndFolders(); } catch(e) { localStorage.removeItem('cloud_drive_token'); } } const hash = window.location.hash; if(hash && hash.includes('token=')) { const tokenMatch = hash.match(/token=([^&]+)/); if(tokenMatch) { const token = tokenMatch[1]; localStorage.setItem('cloud_drive_token', token); window.location.hash = ''; fetchUserInfo(token); } } window.addEventListener('message', handleGoogleAuthMessage); });
+        function handleGoogleAuthMessage(event) { if(event.origin !== API_BASE_URL) return; if(event.data.type === 'google-auth-success') { const authData = event.data.data; currentToken = authData.access_token; currentUser = authData.user; localStorage.setItem('cloud_drive_token', currentToken); localStorage.setItem('cloud_drive_user', JSON.stringify(currentUser)); showApp(); loadStorageInfo(); loadFilesAndFolders(); showAlert('Google sign-in successful!', 'success'); } else if(event.data.type === 'google-auth-error') showAuthAlert(`Google sign-in failed: ${event.data.error}`, 'error'); }
+        async function fetchUserInfo(token) { try { const response = await fetch(`${API_BASE_URL}/users/me/`, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } }); if (!response.ok) throw new Error(); currentUser = await response.json(); currentToken = token; localStorage.setItem('cloud_drive_token', currentToken); localStorage.setItem('cloud_drive_user', JSON.stringify(currentUser)); showApp(); loadStorageInfo(); loadFilesAndFolders(); showAlert('Login successful!', 'success'); } catch { localStorage.removeItem('cloud_drive_token'); showAuthAlert('Invalid token. Please login again.', 'error'); } }
+        function signInWithGooglePopup() { if(!window.google || !window.google.accounts) { showAuthAlert('Google Sign-In unavailable', 'error'); return; } google.accounts.id.prompt(); }
+        googleLoginBtn?.addEventListener('click', signInWithGooglePopup); googleRegisterBtn?.addEventListener('click', signInWithGooglePopup);
+        authTabs.forEach(tab => { tab.addEventListener('click', () => { const tabName = tab.getAttribute('data-tab'); authTabs.forEach(t => t.classList.remove('active')); tab.classList.add('active'); document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active')); document.getElementById(`${tabName}-form`).classList.add('active'); authAlert.classList.remove('active'); }); });
+        loginForm.addEventListener('submit', async (e) => { e.preventDefault(); const email = document.getElementById('login-email').value, password = document.getElementById('login-password').value; showAuthAlert('Signing in...', 'success'); try { const formData = new URLSearchParams(); formData.append('username', email); formData.append('password', password); formData.append('grant_type', 'password'); const response = await fetch(`${API_BASE_URL}/token`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: formData }); if(!response.ok) throw new Error('Invalid email or password'); const data = await response.json(); currentToken = data.access_token; const userResponse = await fetch(`${API_BASE_URL}/users/me/`, { headers: { 'Authorization': `Bearer ${currentToken}` } }); if(!userResponse.ok) throw new Error(); currentUser = await userResponse.json(); localStorage.setItem('cloud_drive_token', currentToken); localStorage.setItem('cloud_drive_user', JSON.stringify(currentUser)); showApp(); loadStorageInfo(); loadFilesAndFolders(); showAlert('Login successful!', 'success'); } catch(error) { showAuthAlert(error.message, 'error'); } });
+        registerForm.addEventListener('submit', async (e) => { e.preventDefault(); const fullName = document.getElementById('register-fullname').value, email = document.getElementById('register-email').value, password = document.getElementById('register-password').value; if(password.length < 6) { showAuthAlert('Password must be at least 6 characters', 'error'); return; } showAuthAlert('Creating account...', 'success'); try { const response = await fetch(`${API_BASE_URL}/users/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, full_name: fullName, password }) }); if(!response.ok) throw new Error('Registration failed'); showAuthAlert('Registration successful! Please login.', 'success'); document.querySelector('[data-tab="login"]').click(); registerForm.reset(); } catch(error) { showAuthAlert(error.message, 'error'); } });
+        logoutBtn.addEventListener('click', () => { localStorage.removeItem('cloud_drive_token'); localStorage.removeItem('cloud_drive_user'); currentToken = null; currentUser = null; folderHistory = [{ id: null, name: 'My Drive' }]; showAuth(); });
+        navItems.forEach(item => { item.addEventListener('click', () => { navItems.forEach(i => i.classList.remove('active')); item.classList.add('active'); const section = item.getAttribute('data-section'); if(section === 'files') loadFilesAndFolders(currentFolderId); }); });
+        newFolderBtn.addEventListener('click', () => { folderNameInput.value = ''; showModal('folder-modal'); });
+        uploadBtn.addEventListener('click', () => fileInput.click()); fileInput.addEventListener('change', (e) => uploadFiles(e.target.files));
+        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); }); uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover')); uploadArea.addEventListener('drop', (e) => { e.preventDefault(); uploadArea.classList.remove('dragover'); if(e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files); }); uploadArea.addEventListener('click', () => fileInput.click());
+        folderForm.addEventListener('submit', async (e) => { e.preventDefault(); const folderName = folderNameInput.value.trim(); if(!folderName) return showAlert('Enter folder name', 'error'); try { const response = await fetch(`${API_BASE_URL}/folders/`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` }, body: JSON.stringify({ name: folderName, parent_id: currentFolderId }) }); if(!response.ok) throw new Error(); hideModal('folder-modal'); showAlert('Folder created', 'success'); loadFilesAndFolders(); } catch { showAlert('Failed to create folder', 'error'); } });
+        document.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', () => hideModal(btn.getAttribute('data-modal'))));
+        window.addEventListener('click', (e) => { if(e.target.classList.contains('modal')) hideModal(e.target.id); });
+        let searchTimeout; searchInput.addEventListener('input', () => { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { const query = searchInput.value.trim(); if(query) searchFiles(query); else loadFilesAndFolders(currentFolderId); }, 500); });
+        function showAuth() { authContainer.style.display = 'flex'; appContainer.style.display = 'none'; authAlert.classList.remove('active'); } function showApp() { authContainer.style.display = 'none'; appContainer.style.display = 'block'; if(currentUser) { userName.textContent = currentUser.full_name; const initials = currentUser.full_name.split(' ').map(n=>n[0]).join('').toUpperCase(); userAvatar.textContent = initials || 'U'; } } function showAuthAlert(msg,type){ authAlert.textContent=msg; authAlert.className=`alert alert-${type}`; authAlert.classList.add('active'); setTimeout(()=>authAlert.classList.remove('active'),4000); } function showAlert(msg,type){ const div=document.createElement('div'); div.className=`alert alert-${type} active`; div.textContent=msg; alertsContainer.appendChild(div); setTimeout(()=>div.remove(),4500); } function showModal(id){ document.getElementById(id).classList.add('active'); } function hideModal(id){ document.getElementById(id).classList.remove('active'); }
+        async function loadStorageInfo(){ try{ const res=await fetch(`${API_BASE_URL}/storage/info`,{headers:{'Authorization':`Bearer ${currentToken}`}}); if(!res.ok) throw new Error(); const data=await res.json(); const percent=Math.min(data.percentage,100); const usedGB=(data.used/1024/1024/1024).toFixed(2); const limitGB=(data.limit/1024/1024/1024).toFixed(0); storageUsedBar.style.width=`${percent}%`; storageText.textContent=`${usedGB} GB of ${limitGB} GB used`; } catch(e){ console.warn(e); } }
+        async function loadFilesAndFolders(folderId=null){ currentFolderId=folderId; loadingSpinner.style.display='block'; filesContent.style.display='none'; try{ let foldersUrl=`${API_BASE_URL}/folders${folderId!==null?`?parent_id=${folderId}`:'?parent_id=null'}`; const foldersRes=await fetch(foldersUrl,{headers:{'Authorization':`Bearer ${currentToken}`}}); if(!foldersRes.ok) throw new Error(); currentFolders=await foldersRes.json(); let filesUrl=`${API_BASE_URL}/files${folderId!==null?`?folder_id=${folderId}`:'?folder_id=null'}`; const filesRes=await fetch(filesUrl,{headers:{'Authorization':`Bearer ${currentToken}`}}); if(!filesRes.ok) throw new Error(); currentFiles=await filesRes.json(); if(folderId){ const folderRes=await fetch(`${API_BASE_URL}/folders/${folderId}`,{headers:{'Authorization':`Bearer ${currentToken}`}}); if(folderRes.ok){ const folder=await folderRes.json(); updateBreadcrumb(folderId,folder.name); } } else updateBreadcrumb(null,'My Drive'); renderFilesAndFolders(); } catch(e){ showAlert('Failed to load content','error'); } finally{ loadingSpinner.style.display='none'; filesContent.style.display='block'; } }
+        function updateBreadcrumb(folderId, folderName){ if(folderId){ const idx=folderHistory.findIndex(f=>f.id===folderId); if(idx!==-1) folderHistory=folderHistory.slice(0,idx+1); else folderHistory.push({id:folderId,name:folderName}); } else folderHistory=[{id:null,name:'My Drive'}]; breadcrumb.innerHTML=''; folderHistory.forEach((folder,idx)=>{ if(idx>0){ const sep=document.createElement('div'); sep.className='breadcrumb-separator'; sep.textContent='/'; breadcrumb.appendChild(sep); } const crumb=document.createElement('div'); crumb.className=`breadcrumb-item ${idx===folderHistory.length-1?'active':''}`; crumb.textContent=folder.name; crumb.setAttribute('data-id',folder.id); if(idx<folderHistory.length-1) crumb.addEventListener('click',()=>loadFilesAndFolders(folder.id)); breadcrumb.appendChild(crumb); }); }
+        function renderFilesAndFolders(){ filesContent.innerHTML=''; if(!currentFolders.length && !currentFiles.length){ filesContent.innerHTML=`<div class="empty-state"><i class="fas fa-folder-open"></i><h3>No files yet</h3><p>Upload your first file or create a new folder</p></div>`; return; } const grid=document.createElement('div'); grid.className='file-grid'; currentFolders.forEach(folder=>{ const el=document.createElement('div'); el.className='folder-item'; el.innerHTML=`<div class="folder-icon"><i class="fas fa-folder"></i></div><div class="folder-name">${escapeHtml(folder.name)}</div><div class="folder-count">${folder.folder_count||0} folders, ${folder.file_count||0} files</div><div class="folder-actions"><button class="action-btn" data-action="open" data-id="${folder.id}"><i class="fas fa-folder-open"></i></button><button class="action-btn" data-action="delete-folder" data-id="${folder.id}"><i class="fas fa-trash"></i></button></div>`; grid.appendChild(el); }); currentFiles.forEach(file=>{ const icon=file.mime_type?.startsWith('image/')?'fa-file-image':file.mime_type?.includes('pdf')?'fa-file-pdf':'fa-file'; const el=document.createElement('div'); el.className='file-item'; el.innerHTML=`<div class="file-icon"><i class="fas ${icon}"></i></div><div class="file-name" title="${escapeHtml(file.original_filename)}">${escapeHtml(file.original_filename)}</div><div class="file-size">${formatFileSize(file.file_size)}</div><div class="file-actions"><button class="action-btn" data-action="preview" data-id="${file.id}"><i class="fas fa-eye"></i></button><button class="action-btn" data-action="download" data-id="${file.id}"><i class="fas fa-download"></i></button><button class="action-btn" data-action="delete" data-id="${file.id}"><i class="fas fa-trash"></i></button></div>`; grid.appendChild(el); }); filesContent.appendChild(grid); document.querySelectorAll('[data-action="open"]').forEach(btn=>btn.addEventListener('click',(e)=>{ e.stopPropagation(); loadFilesAndFolders(parseInt(btn.dataset.id)); })); document.querySelectorAll('[data-action="preview"]').forEach(btn=>btn.addEventListener('click',(e)=>{ e.stopPropagation(); previewFile(parseInt(btn.dataset.id)); })); document.querySelectorAll('[data-action="download"]').forEach(btn=>btn.addEventListener('click',async(e)=>{ e.stopPropagation(); await downloadFile(parseInt(btn.dataset.id)); })); document.querySelectorAll('[data-action="delete"]').forEach(btn=>btn.addEventListener('click',async(e)=>{ e.stopPropagation(); if(confirm('Delete file?')) await deleteFile(parseInt(btn.dataset.id)); })); document.querySelectorAll('[data-action="delete-folder"]').forEach(btn=>btn.addEventListener('click',async(e)=>{ e.stopPropagation(); if(confirm('Delete folder and all contents?')) await deleteFolder(parseInt(btn.dataset.id)); })); }
+        async function uploadFiles(fileList){ if(!fileList.length) return; showAlert(`Uploading ${fileList.length} file(s)...`,'success'); for(const file of fileList){ if(file.size>10*1024*1024*1024){ showAlert(`${file.name} exceeds 10GB`,'error'); continue; } const formData=new FormData(); formData.append('file',file); let url=`${API_BASE_URL}/files/upload${currentFolderId?`?folder_id=${currentFolderId}`:''}`; try{ const res=await fetch(url,{method:'POST',headers:{'Authorization':`Bearer ${currentToken}`},body:formData}); if(!res.ok) throw new Error(); } catch(e){ showAlert(`Failed to upload ${file.name}`,'error'); } } showAlert('Upload completed','success'); loadFilesAndFolders(currentFolderId); loadStorageInfo(); }
+        async function previewFile(fileId){ currentPreviewFileId=fileId; try{ const res=await fetch(`${API_BASE_URL}/files/${fileId}`,{headers:{'Authorization':`Bearer ${currentToken}`}}); if(!res.ok) throw new Error(); const file=await res.json(); previewTitle.textContent=escapeHtml(file.original_filename); previewContent.innerHTML=''; downloadBtn.onclick=()=>{ if(file.download_url) window.open(file.download_url,'_blank'); }; shareBtn.onclick=()=>toggleFileShare(fileId,!file.is_public); shareBtn.innerHTML=file.is_public?'<i class="fas fa-lock"></i> Make private':'<i class="fas fa-share"></i> Make public'; deletePreviewBtn.onclick=()=>{ if(confirm('Delete?')) deleteFile(fileId); hideModal('preview-modal'); }; if(file.mime_type?.startsWith('image/') && file.preview_url){ const img=document.createElement('img'); img.src=file.preview_url; img.className='file-preview'; img.style.maxWidth='100%'; previewContent.appendChild(img); } else{ previewContent.innerHTML=`<div style="text-align:center;padding:30px"><i class="fas fa-file" style="font-size:64px;color:var(--accent)"></i><p>${escapeHtml(file.original_filename)}</p><p>${formatFileSize(file.file_size)}</p></div>`; } showModal('preview-modal'); } catch(e){ showAlert('Preview failed','error'); } }
+        async function downloadFile(fileId){ try{ const res=await fetch(`${API_BASE_URL}/files/${fileId}/download`,{headers:{'Authorization':`Bearer ${currentToken}`}}); if(!res.ok) throw new Error(); const data=await res.json(); if(data.download_url) window.open(data.download_url,'_blank'); } catch(e){ showAlert('Download failed','error'); } }
+        async function deleteFile(fileId){ try{ await fetch(`${API_BASE_URL}/files/${fileId}`,{method:'DELETE',headers:{'Authorization':`Bearer ${currentToken}`}}); showAlert('File deleted','success'); loadFilesAndFolders(currentFolderId); loadStorageInfo(); } catch(e){ showAlert('Delete failed','error'); } }
+        async function deleteFolder(folderId){ try{ await fetch(`${API_BASE_URL}/folders/${folderId}`,{method:'DELETE',headers:{'Authorization':`Bearer ${currentToken}`}}); showAlert('Folder deleted','success'); loadFilesAndFolders(currentFolderId); loadStorageInfo(); } catch(e){ showAlert('Delete failed','error'); } }
+        async function toggleFileShare(fileId,isPublic){ try{ await fetch(`${API_BASE_URL}/files/${fileId}/share`,{method:'PUT',headers:{'Content-Type':'application/json','Authorization':`Bearer ${currentToken}`},body:JSON.stringify({is_public:isPublic})}); showAlert(`File now ${isPublic?'public':'private'}`,'success'); if(currentPreviewFileId===fileId) previewFile(fileId); } catch(e){ showAlert('Share update failed','error'); } }
+        async function searchFiles(query){ try{ const res=await fetch(`${API_BASE_URL}/search?query=${encodeURIComponent(query)}`,{headers:{'Authorization':`Bearer ${currentToken}`}}); if(!res.ok) throw new Error(); const files=await res.json(); filesContent.innerHTML=`<h3 style="margin-bottom:20px;">Search results for “${escapeHtml(query)}”</h3>`; if(!files.length){ filesContent.innerHTML+='<div class="empty-state"><i class="fas fa-search"></i><p>No results</p></div>'; return; } const grid=document.createElement('div'); grid.className='file-grid'; files.forEach(f=>{ const el=document.createElement('div'); el.className='file-item'; el.innerHTML=`<div class="file-icon"><i class="fas fa-file"></i></div><div class="file-name">${escapeHtml(f.original_filename)}</div><div class="file-size">${formatFileSize(f.file_size)}</div><div class="file-actions"><button class="action-btn" data-action="preview" data-id="${f.id}"><i class="fas fa-eye"></i></button><button class="action-btn" data-action="download" data-id="${f.id}"><i class="fas fa-download"></i></button></div>`; grid.appendChild(el); }); filesContent.appendChild(grid); addSearchListeners(grid); } catch(e){ showAlert('Search error','error'); } }
+        function addSearchListeners(grid){ grid.querySelectorAll('[data-action="preview"]').forEach(btn=>btn.addEventListener('click',()=>previewFile(parseInt(btn.dataset.id)))); grid.querySelectorAll('[data-action="download"]').forEach(btn=>btn.addEventListener('click',()=>downloadFile(parseInt(btn.dataset.id)))); }
+        function formatFileSize(bytes){ if(bytes===0) return '0 Bytes'; const k=1024, sizes=['Bytes','KB','MB','GB','TB']; const i=Math.floor(Math.log(bytes)/Math.log(k)); return parseFloat((bytes/Math.pow(k,i)).toFixed(2))+' '+sizes[i]; }
+        function escapeHtml(text){ const div=document.createElement('div'); div.textContent=text; return div.innerHTML; }
+    </script>
+</body>
+</html>
+```        }
 
         .container {
             max-width: 1200px;
