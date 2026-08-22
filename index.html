@@ -75,12 +75,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .btn-ghost:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);box-shadow:none;transform:translateY(-1px)}
 .btn-danger-soft{background:rgba(220,38,38,0.07);color:var(--danger);border:1.5px solid rgba(220,38,38,0.15);box-shadow:none}
 .btn-danger-soft:hover{background:rgba(220,38,38,0.13);box-shadow:none;transform:translateY(-1px)}
-.btn-google{background:var(--surface);color:#374151;border:1.5px solid rgba(124,58,237,0.15);box-shadow:var(--shadow-xs)}
-.btn-google:hover{border-color:var(--accent);background:var(--accent-dim);transform:translateY(-1px)}
-.divider{display:flex;align-items:center;gap:12px;margin:22px 0;color:#9ca3af;font-size:12px;font-weight:500}
-.divider::before,.divider::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(124,58,237,0.14),transparent)}
 #auth-alert{margin-top:16px;border-radius:var(--radius-sm);font-size:13px;padding:11px 15px;display:none}
 #auth-alert.active{display:block}
+.btn-loading{cursor:default;opacity:0.85;pointer-events:none}
+.btn-loading .btn-label::before{content:'';display:inline-block;width:13px;height:13px;margin-right:8px;vertical-align:-2px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite}
 
 /* ══════════════════════════════════════
    APP LAYOUT
@@ -140,6 +138,17 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .upload-icon{width:52px;height:52px;background:linear-gradient(135deg,rgba(124,58,237,0.1) 0%,rgba(167,139,250,0.1) 100%);border:1.5px solid rgba(124,58,237,0.18);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--accent);margin:0 auto 16px;position:relative;z-index:1}
 .upload-area h3{font-size:15px;font-weight:600;margin-bottom:5px;color:var(--text);position:relative;z-index:1}
 .upload-area p{font-size:13px;color:#9ca3af;position:relative;z-index:1}
+.upload-area.uploading{cursor:default;border-color:var(--accent)}
+.upload-area.uploading .upload-icon{color:var(--accent)}
+
+/* Upload streak progress bar */
+.upload-progress{display:none;height:4px;border-radius:99px;background:rgba(124,58,237,0.12);overflow:hidden;position:relative;margin:-16px 0 28px}
+.upload-progress.active{display:block}
+.upload-progress-streak{position:absolute;top:0;left:0;width:35%;height:100%;border-radius:99px;background:var(--gradient);animation:streak 1.15s cubic-bezier(0.4,0,0.2,1) infinite}
+@keyframes streak{0%{left:-35%}60%{left:100%}100%{left:100%}}
+.upload-status{display:none;align-items:center;gap:8px;font-size:12.5px;font-weight:500;color:var(--accent);margin:-18px 0 20px;font-family:'JetBrains Mono',monospace}
+.upload-status.active{display:flex}
+.upload-status i{font-size:11px;animation:spin 0.8s linear infinite}
 
 /* Alerts */
 #alerts-container{position:fixed;bottom:28px;right:28px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
@@ -239,10 +248,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
                 <label for="login-password">Password</label>
                 <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
             </div>
-            <button type="submit" class="btn btn-block" style="margin-top:4px">Sign in</button>
-            <div class="divider"><span>or continue with</span></div>
-            <button type="button" id="google-login-btn" class="btn btn-block btn-google">
-                <i class="fab fa-google"></i> Google
+            <button type="submit" id="login-submit-btn" class="btn btn-block" style="margin-top:4px">
+                <span class="btn-label">Sign in</span>
             </button>
         </form>
 
@@ -259,10 +266,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
                 <label for="register-password">Password</label>
                 <input type="password" id="register-password" class="form-control" placeholder="Min. 6 characters" required>
             </div>
-            <button type="submit" class="btn btn-block" style="margin-top:4px">Create account</button>
-            <div class="divider"><span>or continue with</span></div>
-            <button type="button" id="google-register-btn" class="btn btn-block btn-google">
-                <i class="fab fa-google"></i> Google
+            <button type="submit" id="register-submit-btn" class="btn btn-block" style="margin-top:4px">
+                <span class="btn-label">Create account</span>
             </button>
         </form>
 
@@ -339,9 +344,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 
             <div id="upload-area" class="upload-area">
                 <div class="upload-icon"><i class="fas fa-cloud-arrow-up"></i></div>
-                <h3>Drop files to upload</h3>
-                <p>or click to browse · Max 10 GB per file</p>
+                <h3 id="upload-area-title">Drop files to upload</h3>
+                <p id="upload-area-subtitle">or click to browse · Max 10 GB per file</p>
             </div>
+            <div id="upload-progress" class="upload-progress"><div class="upload-progress-streak"></div></div>
+            <div id="upload-status" class="upload-status"><i class="fas fa-circle-notch"></i><span id="upload-status-text">Uploading…</span></div>
 
             <div id="alerts-container"></div>
 
@@ -391,10 +398,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
     </div>
 </div>
 
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
     const API_BASE_URL = 'https://drive-1-r8nr.onrender.com';
-    const GOOGLE_CLIENT_ID = '304984836974-0o5rdilg1pdvg3almd5js4b42je8p6e3.apps.googleusercontent.com';
 
     let currentUser = null, currentToken = null, currentFolderId = null;
     let currentFiles = [], currentFolders = [], currentPreviewFileId = null;
@@ -418,6 +423,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
     const uploadBtn      = $('upload-btn');
     const fileInput      = $('file-input');
     const uploadArea     = $('upload-area');
+    const uploadProgress = $('upload-progress');
+    const uploadStatus   = $('upload-status');
+    const uploadStatusText=$('upload-status-text');
     const filesContent   = $('files-content');
     const loadingSpinner = $('loading-spinner');
     const alertsContainer= $('alerts-container');
@@ -430,8 +438,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
     const downloadBtn    = $('download-btn');
     const shareBtn       = $('share-btn');
     const deletePreviewBtn=$('delete-preview-btn');
-    const googleLoginBtn = $('google-login-btn');
-    const googleRegisterBtn=$('google-register-btn');
+    const loginSubmitBtn = $('login-submit-btn');
+    const registerSubmitBtn=$('register-submit-btn');
     const authTabs       = document.querySelectorAll('.auth-tab');
     const navItems       = document.querySelectorAll('.nav-item');
 
@@ -453,22 +461,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
             const m = hash.match(/token=([^&]+)/);
             if (m) { localStorage.setItem('cloud_drive_token', m[1]); window.location.hash = ''; fetchUserInfo(m[1]); }
         }
-        window.addEventListener('message', handleGoogleAuthMessage);
     });
-
-    function handleGoogleAuthMessage(event) {
-        if (event.origin !== API_BASE_URL) return;
-        if (event.data.type === 'google-auth-success') {
-            const d = event.data.data;
-            currentToken = d.access_token; currentUser = d.user;
-            localStorage.setItem('cloud_drive_token', currentToken);
-            localStorage.setItem('cloud_drive_user', JSON.stringify(currentUser));
-            showApp(); loadStorageInfo(); loadFilesAndFolders();
-            showAlert('Google sign-in successful!', 'success');
-        } else if (event.data.type === 'google-auth-error') {
-            showAuthAlert(`Google sign-in failed: ${event.data.error}`, 'error');
-        }
-    }
 
     async function fetchUserInfo(token) {
         try {
@@ -485,31 +478,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
         }
     }
 
-    async function handleGoogleCredentialResponse(response) {
-        try {
-            const r = await fetch(`${API_BASE_URL}/auth/google`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify({ credential: response.credential })
-            });
-            if (!r.ok) { const e = await r.json(); throw new Error(e.detail || 'Google auth failed'); }
-            const d = await r.json();
-            currentToken = d.access_token; currentUser = d.user;
-            localStorage.setItem('cloud_drive_token', currentToken);
-            localStorage.setItem('cloud_drive_user', JSON.stringify(currentUser));
-            showApp(); loadStorageInfo(); loadFilesAndFolders();
-            showAlert('Google sign-in successful!', 'success');
-        } catch (e) { showAuthAlert(`Google sign-in failed: ${e.message}`, 'error'); }
-    }
-
-    function signInWithGooglePopup() {
-        if (!window.google || !window.google.accounts) { showAuthAlert('Google Sign-In unavailable. Refresh and try again.', 'error'); return; }
-        google.accounts.id.prompt();
-    }
-
-    googleLoginBtn.addEventListener('click', signInWithGooglePopup);
-    googleRegisterBtn.addEventListener('click', signInWithGooglePopup);
-
     authTabs.forEach(tab => {
         tab.addEventListener('click', () => {
             const t = tab.getAttribute('data-tab');
@@ -521,10 +489,23 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
         });
     });
 
+    function setBtnLoading(btn, loading, loadingText) {
+        if (loading) {
+            btn.disabled = true;
+            btn.dataset.originalLabel = btn.querySelector('.btn-label').textContent;
+            btn.querySelector('.btn-label').textContent = loadingText;
+            btn.classList.add('btn-loading');
+        } else {
+            btn.disabled = false;
+            btn.querySelector('.btn-label').textContent = btn.dataset.originalLabel || btn.querySelector('.btn-label').textContent;
+            btn.classList.remove('btn-loading');
+        }
+    }
+
     loginForm.addEventListener('submit', async e => {
         e.preventDefault();
         const email = $('login-email').value, password = $('login-password').value;
-        showAuthAlert('Signing in…', 'success');
+        setBtnLoading(loginSubmitBtn, true, 'Signing in…');
         try {
             const fd = new URLSearchParams();
             fd.append('username', email); fd.append('password', password); fd.append('grant_type', 'password');
@@ -539,13 +520,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
             showApp(); loadStorageInfo(); loadFilesAndFolders();
             showAlert('Welcome back!', 'success');
         } catch (e) { showAuthAlert(e.message, 'error'); }
+        finally { setBtnLoading(loginSubmitBtn, false); }
     });
 
     registerForm.addEventListener('submit', async e => {
         e.preventDefault();
         const fullName = $('register-fullname').value, email = $('register-email').value, password = $('register-password').value;
         if (password.length < 6) { showAuthAlert('Password must be at least 6 characters', 'error'); return; }
-        showAuthAlert('Creating your account…', 'success');
+        setBtnLoading(registerSubmitBtn, true, 'Creating account…');
         try {
             const r = await fetch(`${API_BASE_URL}/users/`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ email, full_name: fullName, password }) });
             if (!r.ok) { const e = await r.json(); throw new Error(e.detail || 'Registration failed'); }
@@ -556,6 +538,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
             loginForm.classList.add('active');
             registerForm.reset();
         } catch (e) { showAuthAlert(e.message, 'error'); }
+        finally { setBtnLoading(registerSubmitBtn, false); }
     });
 
     logoutBtn.addEventListener('click', () => {
@@ -573,16 +556,17 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
     });
 
     newFolderBtn.addEventListener('click', () => { folderNameInput.value = ''; showModal('folder-modal'); });
-    uploadBtn.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', e => uploadFiles(e.target.files));
+    uploadBtn.addEventListener('click', () => { if (!uploadArea.classList.contains('uploading')) fileInput.click(); });
+    fileInput.addEventListener('change', e => { uploadFiles(e.target.files); fileInput.value = ''; });
 
-    uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+    uploadArea.addEventListener('dragover', e => { e.preventDefault(); if (!uploadArea.classList.contains('uploading')) uploadArea.classList.add('dragover'); });
     uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
     uploadArea.addEventListener('drop', e => {
         e.preventDefault(); uploadArea.classList.remove('dragover');
+        if (uploadArea.classList.contains('uploading')) return;
         if (e.dataTransfer.files.length > 0) uploadFiles(e.dataTransfer.files);
     });
-    uploadArea.addEventListener('click', () => fileInput.click());
+    uploadArea.addEventListener('click', () => { if (!uploadArea.classList.contains('uploading')) fileInput.click(); });
 
     folderForm.addEventListener('submit', async e => {
         e.preventDefault();
@@ -746,19 +730,30 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 
     async function uploadFiles(fileList) {
         if (!fileList || fileList.length === 0) return;
-        showAlert(`Uploading ${fileList.length} file${fileList.length > 1 ? 's' : ''}…`, 'success');
-        for (let i = 0; i < fileList.length; i++) {
-            const file = fileList[i];
-            if (file.size > 10 * 1024 * 1024 * 1024) { showAlert(`"${file.name}" exceeds 10 GB limit`, 'error'); continue; }
-            const fd = new FormData(); fd.append('file', file);
-            let url = `${API_BASE_URL}/files/upload`; if (currentFolderId) url += `?folder_id=${currentFolderId}`;
-            try {
-                const r = await fetch(url, { method: 'POST', headers: { 'Authorization': `Bearer ${currentToken}` }, body: fd });
-                if (!r.ok) { const e = await r.json(); throw new Error(e.detail || `Failed to upload "${file.name}"`); }
-            } catch (e) { showAlert(e.message, 'error'); }
+        const total = fileList.length;
+        uploadArea.classList.add('uploading');
+        uploadProgress.classList.add('active');
+        uploadStatus.classList.add('active');
+        uploadStatusText.textContent = `Uploading ${total} file${total > 1 ? 's' : ''}…`;
+        try {
+            for (let i = 0; i < fileList.length; i++) {
+                const file = fileList[i];
+                uploadStatusText.textContent = `Uploading ${i + 1} of ${total}: ${file.name}`;
+                if (file.size > 10 * 1024 * 1024 * 1024) { showAlert(`"${file.name}" exceeds 10 GB limit`, 'error'); continue; }
+                const fd = new FormData(); fd.append('file', file);
+                let url = `${API_BASE_URL}/files/upload`; if (currentFolderId) url += `?folder_id=${currentFolderId}`;
+                try {
+                    const r = await fetch(url, { method: 'POST', headers: { 'Authorization': `Bearer ${currentToken}` }, body: fd });
+                    if (!r.ok) { const e = await r.json(); throw new Error(e.detail || `Failed to upload "${file.name}"`); }
+                } catch (e) { showAlert(e.message, 'error'); }
+            }
+            showAlert('Upload complete!', 'success');
+            loadFilesAndFolders(currentFolderId); loadStorageInfo();
+        } finally {
+            uploadArea.classList.remove('uploading');
+            uploadProgress.classList.remove('active');
+            uploadStatus.classList.remove('active');
         }
-        showAlert('Upload complete!', 'success');
-        loadFilesAndFolders(currentFolderId); loadStorageInfo();
     }
 
     async function previewFile(fileId) {
